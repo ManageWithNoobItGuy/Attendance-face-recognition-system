@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
+  <style>
+    body { font-family: 'Sarabun', sans-serif; text-align: center; padding: 20px; background: #f8f9fa; }
+    video { border-radius: 8px; width: 100%; max-width: 500px; background: #000; transform: scaleX(-1); }
+    .container { max-width: 600px; margin: 0 auto; }
+    input { padding: 12px; width: 70%; font-size: 16px; margin-top: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    
+    button { padding: 12px 25px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; }
+    button:disabled { background: #ccc; }
+    
+    #msg { margin-top: 15px; font-weight: bold; color: #28a745; min-height: 24px; }
+    .instruction { font-size: 14px; color: #666; margin-bottom: 10px; }
+    .count-badge { background: #6c757d; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 5px;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>👤 ลงทะเบียนใบหน้า</h2>
+    <p class="instruction">💡 เพื่อความแม่นยำ ควรบันทึก 3 มุม (หน้าตรง / หันซ้ายนิดหน่อย / หันขวานิดหน่อย)</p>
+    
+    <div id="status">กำลังโหลด Model...</div>
+    <video id="video" autoplay muted playsinline></video>
+    
+    <input type="text" id="username" placeholder="ระบุชื่อพนักงาน (เช่น Admin)">
+    <br>
+    <button id="btnSave" onclick="saveFace()" disabled>📸 บันทึกใบหน้า <span id="saveCount" class="count-badge">0</span></button>
+    
+    <div id="msg"></div>
+    
+    <? var url = getScriptUrl(); ?>
+    <a href="<?= url ?>" style="display:block; margin-top:20px; color:#666;">← กลับเมนู</a>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const status = document.getElementById('status');
+    const btnSave = document.getElementById('btnSave');
+    const msgDiv = document.getElementById('msg');
+    const saveCountSpan = document.getElementById('saveCount');
+    let saveCounter = 0;
+
+    window.addEventListener('load', async () => {
+      await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models')
+      ]);
+      startVideo();
+    });
+
+    function startVideo() {
+      navigator.mediaDevices.getUserMedia({ video: {} })
+        .then(stream => {
+          video.srcObject = stream;
+          status.innerText = "";
+          btnSave.disabled = false;
+        });
+    }
+
+    async function saveFace() {
+      const name = document.getElementById('username').value.trim();
+      if (!name) return alert("กรุณาใส่ชื่อก่อน");
+
+      btnSave.disabled = true;
+      btnSave.innerText = "กำลังประมวลผล...";
+      msgDiv.innerText = "";
+
+      const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+
+      if (detection) {
+        const descriptorArray = Array.from(detection.descriptor);
+        
+        google.script.run.withSuccessHandler(() => {
+          saveCounter++;
+          saveCountSpan.innerText = saveCounter;
+          
+          msgDiv.innerText = `✅ บันทึกครั้งที่ ${saveCounter} สำเร็จ! ลองขยับหน้าเล็กน้อยแล้วกดบันทึกอีกครั้ง`;
+          
+          btnSave.disabled = false;
+          btnSave.innerText = `📸 บันทึกใบหน้าเพิ่ม`;
+          
+          // ไม่เคลียร์ชื่อ เพื่อให้กดซ้ำได้เลย
+        }).registerUser(name, descriptorArray);
+        
+      } else {
+        alert("ไม่พบใบหน้า! กรุณามองกล้องให้ชัดเจน");
+        btnSave.disabled = false;
+        btnSave.innerText = "📸 บันทึกใบหน้า";
+      }
+    }
+  </script>
+</body>
+</html>
