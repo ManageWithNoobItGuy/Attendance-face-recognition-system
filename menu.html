@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body { font-family: 'Sarabun', sans-serif; text-align: center; padding: 50px 20px; background-color: #f8f9fa; }
+    h1 { color: #333; margin-bottom: 40px; }
+    .btn-menu {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 15px auto;
+      padding: 20px;
+      font-size: 18px;
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .btn-register { background-color: #007bff; }
+    .btn-scan { background-color: #28a745; }
+    .btn-menu:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+  <h1>ระบบ Face Recognition</h1>
+  
+  <? var url = getScriptUrl(); ?>
+  
+  <a href="<?= url ?>?page=register" class="btn-menu btn-register">
+    👤 ลงทะเบียนพนักงานใหม่
+  </a>
+  
+  <a href="<?= url ?>?page=scan" class="btn-menu btn-scan">
+    📷 สแกนเข้างาน
+  </a>
+
+</body>
+</html>
